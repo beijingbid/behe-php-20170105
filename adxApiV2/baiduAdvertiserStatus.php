@@ -1,0 +1,65 @@
+<?php
+namespace adxApiV2;
+
+define('APP_PATH', realpath(dirname(__FILE__).'/../'));
+require_once APP_PATH . '/config/baiduConfig.php';
+require_once APP_PATH . '/library/base.php';
+
+use adxApiV2\config\baiduConfig as baiduConfig;
+use \library\base as base;
+
+class baiduAdvertiserStatus extends base{
+
+    public $appName = 'baiduAdvertiserStatus';
+
+    public function run(){
+        $this->baiduConfig = new baiduConfig();
+        $this->appEnv = 'development';
+        $this->createPid($this->appName);
+        $arr_client_list = array();
+        $arr_db_info = $this->getWaitStatusAdvertiser("adxId = 11  and adxStatus in (0,2)");
+        if ($arr_db_info) {
+            $total = count($arr_db_info);
+            $idAry = array();
+            foreach ($arr_db_info as $k => $item_db) {
+                $accountId = $item_db['beheAccountId'];
+                $idAry[] = $accountId;
+                if (count($idAry) == 100 || ($total - 1) == $k) {
+                    $arr_send_json = array();
+                    $arr_send_json["advertiserIds"] = $idAry;
+                    $arr_send_json["authHeader"]["dspId"] = $this->baiduConfig->baidu_dsp_id;
+                    $arr_send_json["authHeader"]["token"] = $this->baiduConfig->baidu_token;
+                    $str_json = json_encode($arr_send_json);
+                    $str_return = $this->postCurl($this->baiduConfig->baidu_advertiser_status, $str_json, "json");
+                    if (!empty($str_return) && $str_return['httpCode'] == 200) {
+                        $arr_client_list = $str_return['response'];
+                        foreach ($arr_client_list["response"] as $item_client) {
+                            $state = $item_client["state"];
+                            $advertiserId = $item_client["advertiserId"];
+                            $reason = $item_client["refuseReason"];
+                            $update_data = array();
+                            $update_data['mtime'] = date("Y-m-d H:i:s");
+                            if ($state == 0) {
+                                $update_data['adxStatus'] = 1;
+                                $this->saveAdvertiser($advertiserId,11,$update_data);
+                            } else if ($state == 2) {
+                                $update_data['adxStatus'] = 2;
+                                $this->saveAdvertiser($advertiserId,11,$update_data);
+                            } else if ($state == 3 || $state == 1) {
+                                $update_data['adxStatus'] = 0;
+                                $this->saveAdvertiser($advertiserId,11,$update_data);
+                            }
+                        }
+                    }
+                    $idAry = array();
+                }
+            }
+        }
+        $this->destoryPid($this->appName);
+    }
+}
+
+$obj = new baiduAdvertiserStatus();
+$obj->run();
+?>
+
