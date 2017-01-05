@@ -35,7 +35,8 @@ class common {
             ),
             'development' => array(
                 'again_v1_main' => array('dbname' => 'again_v1_main', 'offset' => 5),
-                'again_v1_info' => array('dbname' => 'again_v1_info', 'offset' => 5)
+                'again_v1_info' => array('dbname' => 'again_v1_info', 'offset' => 5),
+                'again_v1_creative' => array('dbname' => 'again_v1_creative', 'offset' => 5)
             ),
         ),
         'db' => array(

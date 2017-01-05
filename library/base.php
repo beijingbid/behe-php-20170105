@@ -762,6 +762,60 @@ class base {
         return $this->copyMaterial($uploadMaterialList);
     }
 
+	// 获取所有素材
+    public function getAllMaterial($exchangeId, $exchangeStatus = 99, $uploadStatus = 0, $ctime = "-1 week") {
+        if (empty($exchangeId)) {
+            return array();
+        }
+        $ctime = date('Y-m-d H:i:s', strtotime($ctime));
+
+
+        $uploadMaterialList = array();
+        //查询所有审核通过的静态创意
+		// SELECT a.id,a.adAccountId,a.creativeId,banner_material.fileStatus,video_material.fileStatus FROM `creative_adx_status` as a 
+left join banner_material on banner_material.id = a.creativeId 
+left join video_material on video_material.id = a.creativeId 
+WHERE a.adxStatus
+IN (0)
+AND a.uploadStatus in (0,1)
+AND a.adxId in (11)
+and a.ctime>'2016-12-29 19:18:27'
+AND a.status =1 
+            $sql = "SELECT * FROM `creative_adx_status`
+
+                WHERE adxStatus
+                IN ({$exchangeStatus})
+                AND uploadStatus in ({$uploadStatus})
+                AND adxId in ({$exchangeId})
+                and ctime>'{$ctime}'
+                AND status =1";
+        if ($this->dbDebug) {
+            $this->log($sql);
+        }
+        $list = $this->select("again_v1_creative", $sql);
+
+        if (!empty($list)) {
+            $uploadMaterialList = $list;
+        }
+        return $this->copyMaterial($uploadMaterialList);
+    }
+
+	
+	public function getOrderList($exchangeId) {
+        if (empty($exchangeId)) {
+            return array();
+        }
+		$str_select_field = "id,name,adAccountId,campaignId,type,creativeType";
+		$str_sql = "SELECT id,name FROM `order_info_mb` union SELECT id,name FROM `order_info_pc` order by id asc";
+        $list = $this->select("again_v1_main", $str_sql);
+        if (!empty($list)) {
+			return $this->copyMaterial($uploadMaterialList);            
+		}else{
+			return array();			
+		}
+	}
+	
+	
     public function event_queue($orderId,$type='order'){
         if($orderId>0){
             $result = $this->select('again_v1_main',"select orderId from event_queue where orderId='{$orderId}' and processed='no' and status_memo=''");

@@ -5,6 +5,7 @@ define('APP_PATH', realpath(dirname(__FILE__).'/../'));
 require_once APP_PATH . '/config/baiduConfig.php';
 require_once APP_PATH . '/library/base.php';
 
+//  数据库: again_v1_main »表: adx_account
 use adxApiV2\config\baiduConfig as baiduConfig;
 use \library\base as base;
 

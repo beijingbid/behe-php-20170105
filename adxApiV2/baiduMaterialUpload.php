@@ -9,6 +9,7 @@ require_once APP_PATH . '/library/base.php';
 use adxApiV2\config\baiduConfig as baiduConfig;
 use \library\base as base;
 
+// »数据库: again_v1_creative »表: creative_adx_status"exchange素材表"
 class baiduMaterialUpload extends base{
 
     public $appName = 'baiduMaterialUpload';
@@ -21,8 +22,11 @@ class baiduMaterialUpload extends base{
         $this->baiduConfig = new baiduConfig();
         $this->appEnv = 'development';
         $this->createPid($this->appName);
-        $arr_db_info = $this->getBannerMaterial(11,99,'0,1');
+        $arr_db_info = $this->getAllMaterial(11,0,'0,1');
+		$this->log(json_encode($arr_db_info));
+		/*
         $allowAccountIdAry = $this->getAllowAdvertiser(11);
+		$this->log(json_encode($arr_db_info));
         if ($arr_db_info) {
             foreach ($arr_db_info as $item_db) {
                 $orderId = $item_db["orderId"];
@@ -187,6 +191,7 @@ class baiduMaterialUpload extends base{
                 }
             }
         }
+		*/
         $this->destoryPid($this->appName);
     }
 }
