@@ -387,12 +387,10 @@ class base {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		
 		if ($this->dbDebug){
-		$this->log($url);
-		$this->log(json_encode($post_string));
-		}else{
-			$data = curl_exec($ch);
+			$this->log($url);
+			$this->log(json_encode($post_string));
 		}
-        //
+        //$data = curl_exec($ch);
         
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -483,8 +481,8 @@ class base {
         $data = array();
         if ($exchangeId > 0) {
             $sql = "SELECT a.brandName,a.brandLogo,a.companyAddress,a.mobile,a.realName,a.companyCateId,a.beheAccountId,a.companySubCateId,a.qualificationInfo,b.adxId, b.beheAccountId, a.companyName,a.adQualifications,b.uploadStatus,a.companyUrl,a.businessLicenseName,b.customerKey
-                FROM again_v1_main.behe_account AS a 
-                RIGHT JOIN again_v1_main.adx_account AS b ON a.beheAccountId = b.beheAccountId
+                FROM again_v1_main.adx_account as b 
+				left join again_v1_main.behe_account as a on a.beheAccountId = b.beheAccountId
                 WHERE b.adxId
                 IN ( {$exchangeId} )
                 AND b.adxStatus in ($exchangeStatus)";
@@ -505,12 +503,12 @@ class base {
 
     public function getWaitStatusAdvertiser($where) {
         $data = array();
-        $sql = "SELECT * from adx_account where $where";
+        $sql = "SELECT beheAccountId from adx_account where $where";
         if ($this->dbDebug) {
             $this->log($sql);
         }
         $list = $this->select("again_v1_main", $sql);
-
+		
         if (!empty($list)) {
             $data = $list;
         }
@@ -533,6 +531,7 @@ class base {
 
     public function saveAdvertiser($beheAccountId = '',$adxId = '',$updateData = array()){
          if(!empty($this->db) && intval($beheAccountId) && intval($adxId) && !empty($updateData)):
+		 $this->log('again_v1_main'.'adx_account'."  beheAccountId = {$beheAccountId} and adxId = {$adxId} ".json_encode($updateData));
              $this->save('again_v1_main','adx_account',"  beheAccountId = {$beheAccountId} and adxId = {$adxId} ",$updateData);
          else:
              $this->log('更新数据信息有误,请重新提交');
@@ -771,24 +770,16 @@ class base {
 
 
         $uploadMaterialList = array();
-        //查询所有审核通过的静态创意
-		// SELECT a.id,a.adAccountId,a.creativeId,banner_material.fileStatus,video_material.fileStatus FROM `creative_adx_status` as a 
+        //查询所有审核通过的静态创意  
+            $sql = "SELECT a.id,a.adAccountId,a.creativeId,banner_material.fileStatus,video_material.fileStatus FROM `creative_adx_status` as a 
 left join banner_material on banner_material.id = a.creativeId 
 left join video_material on video_material.id = a.creativeId 
 WHERE a.adxStatus
-IN (0)
-AND a.uploadStatus in (0,1)
-AND a.adxId in (11)
-and a.ctime>'2016-12-29 19:18:27'
-AND a.status =1 
-            $sql = "SELECT * FROM `creative_adx_status`
-
-                WHERE adxStatus
-                IN ({$exchangeStatus})
-                AND uploadStatus in ({$uploadStatus})
-                AND adxId in ({$exchangeId})
-                and ctime>'{$ctime}'
-                AND status =1";
+IN ($exchangeStatus)
+AND a.uploadStatus in ($uploadStatus)
+AND a.adxId in ($exchangeId)
+and a.ctime>'{$ctime}'
+AND a.status =1";
         if ($this->dbDebug) {
             $this->log($sql);
         }
@@ -797,6 +788,7 @@ AND a.status =1
         if (!empty($list)) {
             $uploadMaterialList = $list;
         }
+		
         return $this->copyMaterial($uploadMaterialList);
     }
 

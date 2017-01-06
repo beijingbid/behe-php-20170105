@@ -18,6 +18,7 @@ class baiduAdvertiserStatus extends base{
         $this->createPid($this->appName);
         $arr_client_list = array();
         $arr_db_info = $this->getWaitStatusAdvertiser("adxId = 11  and adxStatus in (0,2)");
+		
         if ($arr_db_info) {
             $total = count($arr_db_info);
             $idAry = array();
@@ -31,6 +32,16 @@ class baiduAdvertiserStatus extends base{
                     $arr_send_json["authHeader"]["token"] = $this->baiduConfig->baidu_token;
                     $str_json = json_encode($arr_send_json);
                     $str_return = $this->postCurl($this->baiduConfig->baidu_advertiser_status, $str_json, "json");
+					
+					// debug start
+					$arr_return = array();
+					$arr_return['response'] = array();
+					$arr_return['response'][] = array('advertiserId'=>1,'state'=>0,'refuseReason'=>'','sellerAuditInfo'=>'');
+					$arr_return['status'] = 0;
+					$str_return = array('httpCode' => 200, 'response' => $arr_return);						
+					$this->log("response:".json_encode($str_return));
+					// debug end
+					
                     if (!empty($str_return) && $str_return['httpCode'] == 200) {
                         $arr_client_list = $str_return['response'];
                         foreach ($arr_client_list["response"] as $item_client) {
@@ -39,15 +50,23 @@ class baiduAdvertiserStatus extends base{
                             $reason = $item_client["refuseReason"];
                             $update_data = array();
                             $update_data['mtime'] = date("Y-m-d H:i:s");
+							
+							// 通过
                             if ($state == 0) {
                                 $update_data['adxStatus'] = 1;
                                 $this->saveAdvertiser($advertiserId,11,$update_data);
+							// 待检查
+                            } else if ($state == 1) {
+                                //$update_data['adxStatus'] = 2;
+                                //$this->saveAdvertiser($advertiserId,11,$update_data);
+							// 拒绝
                             } else if ($state == 2) {
                                 $update_data['adxStatus'] = 2;
                                 $this->saveAdvertiser($advertiserId,11,$update_data);
-                            } else if ($state == 3 || $state == 1) {
-                                $update_data['adxStatus'] = 0;
-                                $this->saveAdvertiser($advertiserId,11,$update_data);
+							// 资质不全，未检查
+                            } else if ($state == 3) {
+                                //$update_data['adxStatus'] = 0;
+                                //$this->saveAdvertiser($advertiserId,11,$update_data);
                             }
                         }
                     }

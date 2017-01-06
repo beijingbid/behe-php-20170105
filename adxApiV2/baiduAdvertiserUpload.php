@@ -43,7 +43,17 @@ class baiduAdvertiserUpload extends base{
                 }else{
                     $str_return = $this->postCurl($this->baiduConfig->baidu_advertiser_update, $request_json, "json");
                 }
-                if (!empty($str_return) && $str_return['response'] == '200') {
+				
+				// debug start
+				$arr_return = array();
+				$arr_return['response'] = array();
+				$arr_return['status'] = 0;
+				$str_return = array('httpCode' => 200, 'response' => $arr_return);				
+				$this->log(json_encode($arr_return));
+				$this->log(json_encode($str_return));
+				
+				// debug end
+                if (!empty($str_return) && $str_return['httpCode'] == '200') {
                     $arr_return = $str_return['response'];
                     if (!empty($arr_return)) {
                         if ($arr_return['status'] == '2') {

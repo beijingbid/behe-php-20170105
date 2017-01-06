@@ -17,7 +17,7 @@ class baiduWhiteAdvertiserStatus extends base{
         $this->appEnv = 'development';
         $this->createPid($this->appName);
         $arr_client_list = array();
-        $arr_db_info = $this->getWaitStatusAdvertiser("adxId = 11");
+        $arr_db_info = $this->getWaitStatusAdvertiser("adxId = 11 and isWhiteUser = 0");
         if ($arr_db_info) {
             $total=count($arr_db_info);
             $idAry = array();
@@ -31,6 +31,16 @@ class baiduWhiteAdvertiserStatus extends base{
                     $arr_send_json["authHeader"]["token"] = $this->baiduConfig->baidu_token;
                     $str_json = json_encode($arr_send_json);
                     $str_return = $this->postCurl($this->baiduConfig->baidu_advertiser_white_status, $str_json, "json");
+					
+					// debug start
+					$arr_return = array();
+					$arr_return['response'] = array();
+					$arr_return['response'][] = array('advertiserId'=>1,'state'=>0,'refuseReason'=>'','sellerAuditInfo'=>'','isWhiteUser'=>1);
+					$arr_return['status'] = 0;
+					$str_return = array('httpCode' => 200, 'response' => $arr_return);						
+					$this->log("response:".json_encode($str_return));
+					// debug end
+					
                     if (!empty($str_return)) {
                         $arr_client_list = $str_return['response'];
                         foreach ($arr_client_list["response"] as $item_client) {
